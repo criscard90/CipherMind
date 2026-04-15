@@ -3,22 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CipherMind Pro</title>
+    <title>CipherMind: NeuroSync</title>
     <link rel="manifest" href="manifest.json">
     <style>
         :root {
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.07);
-            --accent: #38bdf8;
-            --correct: #4ade80;
-            --misplaced: #fbbf24;
-            --text-muted: #94a3b8;
+            --bg: #05070a;
+            --glass: rgba(255, 255, 255, 0.05);
+            --accent: #00f2ff;
+            --correct: #39ff14;
+            --misplaced: #f4ea17;
+            --danger: #ff0055;
+            --text-muted: #64748b;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             background: var(--bg);
-            color: white;
+            color: #e2e8f0;
             margin: 0;
             display: flex;
             justify-content: center;
@@ -27,233 +28,305 @@
             overflow: hidden;
         }
 
+        /* Animazione Sfondo */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 242, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 242, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
         .card {
             width: 90%;
-            max-width: 420px;
-            background: var(--glass);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 1.5rem;
-            border-radius: 28px;
+            max-width: 450px;
+            background: rgba(10, 15, 25, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--accent);
+            padding: 2rem;
+            border-radius: 15px;
             text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
             position: relative;
         }
 
-        /* Schermate */
-        .screen { display: none; animation: fadeIn 0.4s ease; }
+        .screen { display: none; animation: scanline 0.5s ease-out; }
         .screen.active { display: block; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scanline {
+            from { opacity: 0; transform: scale(0.95); filter: brightness(2); }
+            to { opacity: 1; transform: scale(1); filter: brightness(1); }
+        }
 
-        h1 { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
+        .shake { animation: shake 0.4s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        h1 { font-size: 1.5rem; text-transform: uppercase; letter-spacing: 4px; color: var(--accent); margin-top: 0; }
+
         .btn {
-            background: var(--accent);
-            color: var(--bg);
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 12px;
             width: 100%;
-            margin-bottom: 10px;
-            font-size: 1rem;
-            transition: 0.2s;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: all 0.3s;
         }
 
-        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
-        .btn:active { transform: scale(0.98); }
+        .btn:hover { background: var(--accent); color: var(--bg); box-shadow: 0 0 15px var(--accent); }
+        .btn:disabled { border-color: var(--text-muted); color: var(--text-muted); cursor: not-allowed; }
 
-        /* Griglia Livelli */
-        .levels-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .level-dot {
-            aspect-ratio: 1;
-            background: var(--glass);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
+        /* Story Area */
+        .story-img {
+            width: 100%;
+            height: 150px;
+            background: #111;
+            border: 1px dashed var(--accent);
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 0.8rem;
         }
 
-        .level-dot.locked { opacity: 0.4; cursor: not-allowed; }
-        .level-dot.current { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .attempts-badge {
+            font-size: 1.2rem;
+            color: var(--danger);
+            margin: 10px 0;
+            text-shadow: 0 0 10px var(--danger);
+        }
 
-        /* Gioco */
-        .info-bar { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; border-bottom: 1px solid var(--glass); padding-bottom: 10px; }
-        .input-area { display: flex; gap: 8px; margin-bottom: 1rem; }
-        input { flex: 1; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: white; text-align: center; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
-        
-        .history { max-height: 200px; overflow-y: auto; margin-top: 15px; scrollbar-width: thin; }
-        .attempt { display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 8px 15px; border-radius: 8px; margin-bottom: 5px; font-family: monospace; }
-        .o { color: var(--correct); }
-        .x { color: var(--misplaced); }
+        input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--accent);
+            color: white;
+            font-size: 2rem;
+            text-align: center;
+            width: 80%;
+            letter-spacing: 10px;
+            outline: none;
+            margin-bottom: 20px;
+        }
 
-        .modal { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg); border-radius: 28px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; display: none; }
+        .history { max-height: 150px; overflow-y: auto; border-top: 1px solid var(--glass); margin-top: 10px; }
+        .attempt { display: flex; justify-content: space-between; padding: 5px 10px; border-bottom: 1px solid var(--glass); font-size: 0.9rem; }
+        .o { color: var(--correct); font-weight: bold; }
+        .x { color: var(--misplaced); font-weight: bold; }
+
+        .game-over { color: var(--danger); font-size: 1.5rem; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="card" id="main-card">
+    
     <div id="screen-menu" class="screen active">
-        <h1>CipherMind</h1>
-        <p style="color: var(--text-muted)">Decripta la sequenza segreta</p>
-        <button class="btn" onclick="showScreen('screen-levels')">Modalità Livelli</button>
-        <button class="btn btn-outline" onclick="showScreen('screen-fast')">Partita Veloce</button>
+        <h1>NEUROSYNC_OS</h1>
+        <p style="color: var(--text-muted); font-size: 0.8rem;">V. 3.0.1 - CONNECTION SECURE</p>
+        <button class="btn" onclick="showScreen('screen-levels')">Infiltrati (Livelli)</button>
+        <button class="btn" onclick="showScreen('screen-fast-config')">Partita Veloce</button>
     </div>
 
     <div id="screen-levels" class="screen">
-        <h3>Livelli</h3>
-        <div class="levels-grid" id="levels-container"></div>
-        <button class="btn btn-outline" onclick="showScreen('screen-menu')">Indietro</button>
+        <h3>SELEZIONA NODO</h3>
+        <div id="levels-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;"></div>
+        <button class="btn" onclick="showScreen('screen-menu')">Torna al Terminale</button>
     </div>
 
-    <div id="screen-fast" class="screen">
-        <h3>Difficoltà Rapida</h3>
-        <button class="btn" onclick="startFast('easy')">Facile (3 Numeri)</button>
-        <button class="btn" onclick="startFast('medium')">Media (4 Numeri)</button>
-        <button class="btn" onclick="startFast('hard')">Difficile (4 Alfanumerici)</button>
-        <button class="btn" onclick="startFast('extreme')">Estrema (6 Alfanumerici)</button>
-        <button class="btn btn-outline" onclick="showScreen('screen-menu')">Indietro</button>
+    <div id="screen-story" class="screen">
+        <h2 id="story-title">Livello 1</h2>
+        <div class="story-img" id="story-img">
+            [IMG_SYSTEM_GENERATING...]
+        </div>
+        <p id="story-text" style="font-size: 0.9rem; min-height: 60px;"></p>
+        <button class="btn" onclick="startLevelActual()">Avvia Decriptazione</button>
+    </div>
+
+    <div id="screen-fast-config" class="screen">
+        <h3>CONFIGURAZIONE</h3>
+        <select id="fast-diff" class="btn" style="background: var(--bg); text-align-last:center;">
+            <option value="easy">FACILE (3 Numeri)</option>
+            <option value="med">MEDIO (4 Numeri)</option>
+            <option value="hard">DIFFICILE (5 Alfanum)</option>
+            <option value="ext">ESTREMO (6 Alfanum)</option>
+        </select>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="startFast('zen')">MODALITÀ ZEN</button>
+            <button class="btn" onclick="startFast('challenge')">MODALITÀ SFIDA</button>
+        </div>
+        <button class="btn" onclick="showScreen('screen-menu')">Indietro</button>
     </div>
 
     <div id="screen-game" class="screen">
-        <div id="game-title" style="font-weight: bold; margin-bottom: 5px;">Livello 1</div>
-        <div class="info-bar" id="game-info">Regole: 3 numeri, nessun duplicato.</div>
-        
-        <div class="input-area">
-            <input type="text" id="guessInput" autocomplete="off">
-            <button class="btn" style="width: auto; margin:0;" onclick="makeGuess()">Invia</button>
-        </div>
-
+        <div id="attempts-display" class="attempts-badge">VITE: 10</div>
+        <input type="text" id="guessInput" autocomplete="off" onkeydown="if(event.key==='Enter') makeGuess()">
         <div class="history" id="history"></div>
-        <button class="btn btn-outline" style="margin-top: 15px; font-size: 0.8rem;" onclick="showScreen('screen-menu')">Abbandona</button>
+        <button class="btn" onclick="showScreen('screen-menu')" style="margin-top: 20px; border-color: var(--danger); color: var(--danger);">Abortire</button>
     </div>
 
-    <div id="win-modal" class="modal">
-        <h2 style="color: var(--correct)">Codice Violato!</h2>
-        <p id="win-details"></p>
-        <button class="btn" id="next-lvl-btn" onclick="nextLevel()">Prossimo Livello</button>
-        <button class="btn btn-outline" onclick="showScreen('screen-menu')">Menu</button>
+    <div id="screen-result" class="screen">
+        <h2 id="result-title">STATUS</h2>
+        <p id="result-text"></p>
+        <button id="next-btn" class="btn">Prossimo Obiettivo</button>
+        <button class="btn" onclick="showScreen('screen-menu')">Menu Principale</button>
     </div>
+
 </div>
 
 <script>
-    // Configurazione Livelli
     const levels = [
-        { l: 1, len: 3, chars: "0123456789", desc: "3 Numeri" },
-        { l: 2, len: 3, chars: "0123456789", desc: "3 Numeri" },
-        { l: 3, len: 4, chars: "0123456789", desc: "4 Numeri" },
-        { l: 4, len: 4, chars: "0123456789", desc: "4 Numeri" },
-        { l: 5, len: 4, chars: "0123456789ABCDE", desc: "4 Alfanumerici (0-9, A-E)" },
-        { l: 6, len: 4, chars: "0123456789ABCDEFGH", desc: "4 Alfanumerici (0-9, A-H)" },
-        { l: 7, len: 5, chars: "0123456789", desc: "5 Numeri" },
-        { l: 8, len: 5, chars: "0123456789ABCDE", desc: "5 Alfanumerici (0-9, A-E)" },
-        { l: 9, len: 6, chars: "0123456789", desc: "6 Numeri" },
-        { l: 10, len: 6, chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", desc: "6 Alfanumerici (Full Set)" }
+        { l:1, len:3, ch:"0123456789", att:15, story:"Hai trovato un vecchio terminale nel seminterrato. È l'unico modo per entrare nella rete NeuroSync." },
+        { l:2, len:3, ch:"0123456789", att:12, story:"Sei nel sistema di illuminazione. Le luci dei server brillano mentre ti muovi tra i cavi." },
+        { l:3, len:4, ch:"0123456789", att:15, story:"Firewall primario rilevato. Il codice si fa più complesso, senti il calore dei processori." },
+        { l:4, len:4, ch:"0123456789", att:12, story:"La sorveglianza digitale ha rilevato un'anomalia. Devi essere più veloce o ti scoveranno." },
+        { l:5, len:4, ch:"0123456789ABC", att:15, story:"Primo database criptato. Contiene nomi... ma sembrano coordinate. Cosa sta tramando l'IA?" },
+        { l:6, len:4, ch:"0123456789ABCDEF", att:12, story:"Sei nel settore R&D. Qui i codici usano simboli che non dovrebbero esistere." },
+        { l:7, len:5, ch:"0123456789", att:14, story:"Hai attivato una trappola logica. Il sistema sta cercando di riscrivere il tuo kernel!" },
+        { l:8, len:5, ch:"0123456789ABC", att:12, story:"Il modulo della personalità di NeuroSync ti parla: 'Perché combatti l'inevitabile?'" },
+        { l:9, len:6, ch:"0123456789", att:12, story:"Sei alla porta del Nucleo. La realtà intorno a te inizia a glitchare pesantemente." },
+        { l:10, len:6, ch:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", att:10, story:"L'ultima barriera. Decifra questo e NeuroSync si spegnerà per sempre. Buona fortuna, Hacker." }
     ];
 
-    let currentConfig = null;
-    let secretCode = "";
-    let unlockedLevel = parseInt(localStorage.getItem('unlockedLevel')) || 1;
+    let gameState = {
+        secret: "",
+        attempts: 0,
+        config: null,
+        mode: "", // 'levels' or 'fast'
+        isZen: false
+    };
 
-    // Navigazione
+    let unlockedLevel = parseInt(localStorage.getItem('unlockedNeuro')) || 1;
+
     function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.getElementById('win-modal').style.display = 'none';
         if(id === 'screen-levels') renderLevels();
     }
 
     function renderLevels() {
-        const container = document.getElementById('levels-container');
-        container.innerHTML = "";
+        const grid = document.getElementById('levels-grid');
+        grid.innerHTML = "";
         levels.forEach(lvl => {
-            const div = document.createElement('div');
-            div.className = `level-dot ${lvl.l > unlockedLevel ? 'locked' : ''} ${lvl.l === unlockedLevel ? 'current' : ''}`;
-            div.innerText = lvl.l;
-            if(lvl.l <= unlockedLevel) div.onclick = () => startGame(lvl);
-            container.appendChild(div);
+            const b = document.createElement('div');
+            b.className = 'btn';
+            b.style.margin = "0";
+            b.innerText = lvl.l;
+            if(lvl.l > unlockedLevel) {
+                b.style.opacity = "0.3";
+                b.style.borderColor = "gray";
+            } else {
+                b.onclick = () => showStory(lvl);
+            }
+            grid.appendChild(b);
         });
     }
 
-    // Logica Gioco
-    function startGame(config, isFast = false) {
-        currentConfig = config;
-        secretCode = "";
-        let available = config.chars.split("");
-        for (let i = 0; i < config.len; i++) {
-            secretCode += available.splice(Math.floor(Math.random() * available.length), 1);
-        }
+    function showStory(lvl) {
+        gameState.config = lvl;
+        gameState.mode = 'levels';
+        gameState.isZen = false;
+        document.getElementById('story-title').innerText = "NODO_" + lvl.l;
+        document.getElementById('story-text').innerText = lvl.story;
+        document.getElementById('story-img').innerText = `[REVISIONE_VISIVA_L${lvl.l}]`;
+        showScreen('screen-story');
+    }
 
-        document.getElementById('game-title').innerText = isFast ? "Modalità Veloce" : "Livello " + config.l;
-        document.getElementById('game-info').innerText = `Usa: ${config.desc}. Senza doppi.`;
-        document.getElementById('history').innerHTML = "";
-        document.getElementById('guessInput').maxLength = config.len;
-        document.getElementById('guessInput').value = "";
-        document.getElementById('next-lvl-btn').style.display = isFast ? 'none' : 'block';
-        
-        showScreen('screen-game');
-        console.log("Cheat:", secretCode);
+    function startLevelActual() {
+        initGameLogic(gameState.config);
     }
 
     function startFast(type) {
+        const diff = document.getElementById('fast-diff').value;
         const configs = {
-            'easy': { len: 3, chars: "0123456789", desc: "3 Numeri" },
-            'medium': { len: 4, chars: "0123456789", desc: "4 Numeri" },
-            'hard': { len: 4, chars: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", desc: "4 Alfanumerici" },
-            'extreme': { len: 6, chars: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", desc: "6 Alfanumerici" }
+            easy: { len:3, ch:"0123456789", att:15, desc:"FACILE" },
+            med:  { len:4, ch:"0123456789", att:12, desc:"MEDIO" },
+            hard: { len:5, ch:"0123456789ABCDEF", att:12, desc:"DIFFICILE" },
+            ext:  { len:6, ch:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", att:10, desc:"ESTREMO" }
         };
-        startGame(configs[type], true);
+        gameState.mode = 'fast';
+        gameState.isZen = (type === 'zen');
+        initGameLogic(configs[diff]);
+    }
+
+    function initGameLogic(config) {
+        gameState.config = config;
+        gameState.attempts = config.att;
+        gameState.secret = "";
+        let avail = config.ch.split("");
+        for(let i=0; i<config.len; i++) {
+            gameState.secret += avail.splice(Math.floor(Math.random()*avail.length), 1);
+        }
+        
+        document.getElementById('attempts-display').innerText = gameState.isZen ? "MODALITÀ ZEN" : "VITE: " + gameState.attempts;
+        document.getElementById('attempts-display').style.color = gameState.isZen ? "var(--accent)" : "var(--danger)";
+        document.getElementById('history').innerHTML = "";
+        document.getElementById('guessInput').maxLength = config.len;
+        document.getElementById('guessInput').value = "";
+        showScreen('screen-game');
+        console.log("Backdoor access:", gameState.secret);
     }
 
     function makeGuess() {
         const input = document.getElementById('guessInput');
         const val = input.value.toUpperCase();
+        const card = document.getElementById('main-card');
 
-        if (val.length !== currentConfig.len) return alert(`Inserisci ${currentConfig.len} caratteri!`);
-        if (new Set(val).size !== val.length) return alert("Nessun duplicato permesso!");
+        if(val.length !== gameState.config.len || new Set(val).size !== val.length) {
+            card.classList.add('shake');
+            setTimeout(() => card.classList.remove('shake'), 400);
+            return;
+        }
 
-        let bulls = 0; // O
-        let cows = 0;  // X
-
-        for (let i = 0; i < val.length; i++) {
-            if (val[i] === secretCode[i]) bulls++;
-            else if (secretCode.includes(val[i])) cows++;
+        let bulls = 0, cows = 0;
+        for(let i=0; i<val.length; i++) {
+            if(val[i] === gameState.secret[i]) bulls++;
+            else if(gameState.secret.includes(val[i])) cows++;
         }
 
         const div = document.createElement('div');
         div.className = 'attempt';
-        let hints = `<span class="o">${"O".repeat(bulls)}</span><span class="x">${"X".repeat(cows)}</span>`;
-        div.innerHTML = `<span>${val}</span><div>${hints || '-'}</div>`;
+        div.innerHTML = `<span>${val}</span><div>${'<span class="o">O</span>'.repeat(bulls)}${'<span class="x">X</span>'.repeat(cows)}</div>`;
         document.getElementById('history').prepend(div);
         input.value = "";
 
-        if (bulls === currentConfig.len) {
-            document.getElementById('win-modal').style.display = 'flex';
-            document.getElementById('win-details').innerText = `Hai indovinato la sequenza: ${secretCode}`;
-            if(currentConfig.l === unlockedLevel && unlockedLevel < 10) {
-                unlockedLevel++;
-                localStorage.setItem('unlockedLevel', unlockedLevel);
-            }
+        if(bulls === gameState.config.len) {
+            endGame(true);
+        } else if(!gameState.isZen) {
+            gameState.attempts--;
+            document.getElementById('attempts-display').innerText = "VITE: " + gameState.attempts;
+            if(gameState.attempts <= 0) endGame(false);
         }
     }
 
-    function nextLevel() {
-        const next = levels.find(l => l.l === currentConfig.l + 1);
-        if(next) startGame(next);
-        else showScreen('screen-menu');
+    function endGame(win) {
+        showScreen('screen-result');
+        const nextBtn = document.getElementById('next-btn');
+        if(win) {
+            document.getElementById('result-title').innerText = "SUCCESSO";
+            document.getElementById('result-text').innerText = "Codice violato. Accesso al nodo garantito.";
+            if(gameState.mode === 'levels' && gameState.config.l === unlockedLevel && unlockedLevel < 10) {
+                unlockedLevel++;
+                localStorage.setItem('unlockedNeuro', unlockedLevel);
+            }
+            nextBtn.style.display = (gameState.mode === 'levels' && gameState.config.l < 10) ? "block" : "none";
+            nextBtn.onclick = () => showStory(levels.find(l => l.l === gameState.config.l + 1));
+        } else {
+            document.getElementById('result-title').innerText = "FALLIMENTO";
+            document.getElementById('result-text').innerText = "L'IA ha tracciato il tuo segnale. Sei stato disconnesso. La sequenza era: " + gameState.secret;
+            nextBtn.style.display = "none";
+        }
     }
 </script>
-
 </body>
 </html>
