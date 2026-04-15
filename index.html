@@ -316,7 +316,7 @@
             CHIAVE: ${c.len} CARATTERI | NO DUPLICATI<br>
             CHARSET: <span style="color:var(--correct)">${c.ch}</span>
         `;
-        document.getElementById('attempts-display').innerText = gameState.isZen ? "MODALITÀ ZEN" : "VITE: " + gameState.attempts;
+        document.getElementById('attempts-display').innerText = gameState.isZen ? "MODALITÀ ZEN" : "TENTATIVI: " + gameState.attempts;
         document.getElementById('attempts-display').style.color = gameState.isZen ? "var(--accent)" : "var(--danger)";
         document.getElementById('history').innerHTML = "";
         document.getElementById('guessInput').value = "";
