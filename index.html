@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CipherMind Pro</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --glass: rgba(255, 255, 255, 0.07);
+            --accent: #38bdf8;
+            --correct: #4ade80;
+            --misplaced: #fbbf24;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: white;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .card {
+            width: 90%;
+            max-width: 420px;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 1.5rem;
+            border-radius: 28px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* Schermate */
+        .screen { display: none; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .btn {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+        .btn:active { transform: scale(0.98); }
+
+        /* Griglia Livelli */
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .level-dot {
+            aspect-ratio: 1;
+            background: var(--glass);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .level-dot.locked { opacity: 0.4; cursor: not-allowed; }
+        .level-dot.current { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        /* Gioco */
+        .info-bar { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; border-bottom: 1px solid var(--glass); padding-bottom: 10px; }
+        .input-area { display: flex; gap: 8px; margin-bottom: 1rem; }
+        input { flex: 1; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; color: white; text-align: center; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px; }
+        
+        .history { max-height: 200px; overflow-y: auto; margin-top: 15px; scrollbar-width: thin; }
+        .attempt { display: flex; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 8px 15px; border-radius: 8px; margin-bottom: 5px; font-family: monospace; }
+        .o { color: var(--correct); }
+        .x { color: var(--misplaced); }
+
+        .modal { position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg); border-radius: 28px; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div id="screen-menu" class="screen active">
+        <h1>CipherMind</h1>
+        <p style="color: var(--text-muted)">Decripta la sequenza segreta</p>
+        <button class="btn" onclick="showScreen('screen-levels')">Modalità Livelli</button>
+        <button class="btn btn-outline" onclick="showScreen('screen-fast')">Partita Veloce</button>
+    </div>
+
+    <div id="screen-levels" class="screen">
+        <h3>Livelli</h3>
+        <div class="levels-grid" id="levels-container"></div>
+        <button class="btn btn-outline" onclick="showScreen('screen-menu')">Indietro</button>
+    </div>
+
+    <div id="screen-fast" class="screen">
+        <h3>Difficoltà Rapida</h3>
+        <button class="btn" onclick="startFast('easy')">Facile (3 Numeri)</button>
+        <button class="btn" onclick="startFast('medium')">Media (4 Numeri)</button>
+        <button class="btn" onclick="startFast('hard')">Difficile (4 Alfanumerici)</button>
+        <button class="btn" onclick="startFast('extreme')">Estrema (6 Alfanumerici)</button>
+        <button class="btn btn-outline" onclick="showScreen('screen-menu')">Indietro</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div id="game-title" style="font-weight: bold; margin-bottom: 5px;">Livello 1</div>
+        <div class="info-bar" id="game-info">Regole: 3 numeri, nessun duplicato.</div>
+        
+        <div class="input-area">
+            <input type="text" id="guessInput" autocomplete="off">
+            <button class="btn" style="width: auto; margin:0;" onclick="makeGuess()">Invia</button>
+        </div>
+
+        <div class="history" id="history"></div>
+        <button class="btn btn-outline" style="margin-top: 15px; font-size: 0.8rem;" onclick="showScreen('screen-menu')">Abbandona</button>
+    </div>
+
+    <div id="win-modal" class="modal">
+        <h2 style="color: var(--correct)">Codice Violato!</h2>
+        <p id="win-details"></p>
+        <button class="btn" id="next-lvl-btn" onclick="nextLevel()">Prossimo Livello</button>
+        <button class="btn btn-outline" onclick="showScreen('screen-menu')">Menu</button>
+    </div>
+</div>
+
+<script>
+    // Configurazione Livelli
+    const levels = [
+        { l: 1, len: 3, chars: "0123456789", desc: "3 Numeri" },
+        { l: 2, len: 3, chars: "0123456789", desc: "3 Numeri" },
+        { l: 3, len: 4, chars: "0123456789", desc: "4 Numeri" },
+        { l: 4, len: 4, chars: "0123456789", desc: "4 Numeri" },
+        { l: 5, len: 4, chars: "0123456789ABCDE", desc: "4 Alfanumerici (0-9, A-E)" },
+        { l: 6, len: 4, chars: "0123456789ABCDEFGH", desc: "4 Alfanumerici (0-9, A-H)" },
+        { l: 7, len: 5, chars: "0123456789", desc: "5 Numeri" },
+        { l: 8, len: 5, chars: "0123456789ABCDE", desc: "5 Alfanumerici (0-9, A-E)" },
+        { l: 9, len: 6, chars: "0123456789", desc: "6 Numeri" },
+        { l: 10, len: 6, chars: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", desc: "6 Alfanumerici (Full Set)" }
+    ];
+
+    let currentConfig = null;
+    let secretCode = "";
+    let unlockedLevel = parseInt(localStorage.getItem('unlockedLevel')) || 1;
+
+    // Navigazione
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('win-modal').style.display = 'none';
+        if(id === 'screen-levels') renderLevels();
+    }
+
+    function renderLevels() {
+        const container = document.getElementById('levels-container');
+        container.innerHTML = "";
+        levels.forEach(lvl => {
+            const div = document.createElement('div');
+            div.className = `level-dot ${lvl.l > unlockedLevel ? 'locked' : ''} ${lvl.l === unlockedLevel ? 'current' : ''}`;
+            div.innerText = lvl.l;
+            if(lvl.l <= unlockedLevel) div.onclick = () => startGame(lvl);
+            container.appendChild(div);
+        });
+    }
+
+    // Logica Gioco
+    function startGame(config, isFast = false) {
+        currentConfig = config;
+        secretCode = "";
+        let available = config.chars.split("");
+        for (let i = 0; i < config.len; i++) {
+            secretCode += available.splice(Math.floor(Math.random() * available.length), 1);
+        }
+
+        document.getElementById('game-title').innerText = isFast ? "Modalità Veloce" : "Livello " + config.l;
+        document.getElementById('game-info').innerText = `Usa: ${config.desc}. Senza doppi.`;
+        document.getElementById('history').innerHTML = "";
+        document.getElementById('guessInput').maxLength = config.len;
+        document.getElementById('guessInput').value = "";
+        document.getElementById('next-lvl-btn').style.display = isFast ? 'none' : 'block';
+        
+        showScreen('screen-game');
+        console.log("Cheat:", secretCode);
+    }
+
+    function startFast(type) {
+        const configs = {
+            'easy': { len: 3, chars: "0123456789", desc: "3 Numeri" },
+            'medium': { len: 4, chars: "0123456789", desc: "4 Numeri" },
+            'hard': { len: 4, chars: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", desc: "4 Alfanumerici" },
+            'extreme': { len: 6, chars: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", desc: "6 Alfanumerici" }
+        };
+        startGame(configs[type], true);
+    }
+
+    function makeGuess() {
+        const input = document.getElementById('guessInput');
+        const val = input.value.toUpperCase();
+
+        if (val.length !== currentConfig.len) return alert(`Inserisci ${currentConfig.len} caratteri!`);
+        if (new Set(val).size !== val.length) return alert("Nessun duplicato permesso!");
+
+        let bulls = 0; // O
+        let cows = 0;  // X
+
+        for (let i = 0; i < val.length; i++) {
+            if (val[i] === secretCode[i]) bulls++;
+            else if (secretCode.includes(val[i])) cows++;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'attempt';
+        let hints = `<span class="o">${"O".repeat(bulls)}</span><span class="x">${"X".repeat(cows)}</span>`;
+        div.innerHTML = `<span>${val}</span><div>${hints || '-'}</div>`;
+        document.getElementById('history').prepend(div);
+        input.value = "";
+
+        if (bulls === currentConfig.len) {
+            document.getElementById('win-modal').style.display = 'flex';
+            document.getElementById('win-details').innerText = `Hai indovinato la sequenza: ${secretCode}`;
+            if(currentConfig.l === unlockedLevel && unlockedLevel < 10) {
+                unlockedLevel++;
+                localStorage.setItem('unlockedLevel', unlockedLevel);
+            }
+        }
+    }
+
+    function nextLevel() {
+        const next = levels.find(l => l.l === currentConfig.l + 1);
+        if(next) startGame(next);
+        else showScreen('screen-menu');
+    }
+</script>
+
+</body>
+</html>
