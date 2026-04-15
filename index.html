@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CipherMind: NeuroSync</title>
     <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <meta name="theme-color" content="#05070a">
     <style>
         :root {
@@ -120,17 +121,26 @@
         .attempts-badge { font-size: 1.1rem; color: var(--danger); margin: 10px 0; font-weight: bold; }
         
         input {
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid var(--accent);
-            color: white;
-            font-size: 2.2rem;
-            text-align: center;
-            width: 90%;
-            letter-spacing: 8px;
-            outline: none;
-            margin-bottom: 20px;
-            text-transform: uppercase;
+    /* Collega il font caricato sopra */
+    font-family: 'Share Tech Mono', monospace;
+    
+    /* Colore azzurro neon come le scritte sopra */
+    color: var(--accent);
+    
+    /* Ombra per l'effetto bagliore */
+    text-shadow: 0 0 10px var(--accent);
+
+    /* Mantieni o aggiorna queste per la struttura */
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--accent);
+    font-size: 2.8rem; /* Un po' più grande per leggibilità */
+    text-align: center;
+    width: 90%;
+    letter-spacing: 12px;
+    outline: none;
+    margin-bottom: 20px;
+    text-transform: uppercase;
         }
 
         .history { max-height: 180px; overflow-y: auto; margin-top: 10px; border-top: 1px solid var(--glass); }
