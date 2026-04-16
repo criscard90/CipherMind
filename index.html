@@ -890,6 +890,12 @@ function addMatrixEffect() {
                     gameState.config = levels.find(l => l.l === gameState.config.l + 1);
                     document.getElementById('story-title').innerText = "NODO_" + String(gameState.config.l).padStart(2, '0');
                     document.getElementById('story-text').innerText = gameState.config.story;
+                    
+                    // Aggiorna l'immagine del livello
+                    const storyImgDiv = document.getElementById('story-img');
+                    const imagePath = `livello${gameState.config.l}.jpg`;
+                    storyImgDiv.innerHTML = `<img src="${imagePath}" alt="Visuale Nodo ${gameState.config.l}" style="width:100%; height:100%; object-fit:cover;">`;
+                    
                     showScreen('screen-story');
                 };
             } else {
