@@ -18,6 +18,36 @@
             --text-muted: #64748b;
         }
         
+        /* --- CUSTOM SCROLLBAR NEUROSYNC --- */
+        
+        /* Per Chrome, Edge e Safari */
+        ::-webkit-scrollbar {
+            width: 6px;              /* Larghezza della barra verticale */
+            height: 6px;             /* Altezza della barra orizzontale */
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #050505;     /* Colore dello sfondo della barra (quasi nero) */
+            border-left: 1px solid #111;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent); /* Il colore neon che stai usando (verde/ciano) */
+            border-radius: 0px;        /* Squadrata per uno stile più industriale */
+            box-shadow: 0 0 10px var(--accent); /* Effetto bagliore (opzionale) */
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #fff;        /* Diventa bianca al passaggio del mouse per feedback */
+            box-shadow: 0 0 15px #fff;
+        }
+        
+        /* Per Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) #050505;
+        }
+        
         body {
             font-family: 'Courier New', Courier, monospace;
             background: var(--bg);
@@ -227,12 +257,21 @@
             padding: 15px;
             text-align: left;
             min-height: 120px;
+            max-height: 280px;
             font-size: 0.8rem;
             border: 1px solid rgba(0,242,255,0.2);
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            scroll-behavior: smooth;
         }
         
         .scan-line { overflow: hidden; white-space: nowrap; border-right: 2px solid var(--accent); width: 0; animation: typing 0.6s steps(30, end) forwards; margin-bottom: 4px; }
         @keyframes typing { from { width: 0 } to { width: 100% } }
+        
+        .briefing-line { overflow: hidden; border-right: 2px solid var(--accent); max-height: 6em; animation: typing-brief 0.8s steps(80, end) forwards; margin-bottom: 4px; word-wrap: break-word; white-space: normal; }
+        @keyframes typing-brief { from { max-height: 0; opacity: 0; } to { max-height: 6em; opacity: 1; } }
         
         /* Game UI */
         .specs-box { font-size: 0.75rem; color: var(--accent); text-align: left; margin-bottom: 15px; border-left: 2px solid var(--accent); padding-left: 10px; line-height: 1.4; }
@@ -296,6 +335,12 @@
             <button class="btn" onclick="runBootSequence()">Inizia Scansione Hacker</button>
         </div>
         
+        <div id="screen-briefing" class="screen">
+            <h2 style="font-size: 0.9rem; color: var(--accent); text-align: left; margin-bottom: 20px;">[ ARCHIVIO_CRITTOGRAFATO // LIVELLO_DI_ACCESSO: OMEGA ]</h2>
+            <div class="boot-terminal" id="briefing-terminal"></div>
+            <button id="btn-briefing-confirm" class="btn" style="margin-top: 20px; display: none;" onclick="closeBriefing()">Comprendi Missione</button>
+        </div>
+        
         <div id="screen-boot" class="screen">
             <h2 style="font-size: 1rem; color: var(--accent);">ATTACCO BRUTE-FORCE IN CORSO...</h2>
             <div class="boot-terminal" id="boot-terminal"></div>
@@ -351,12 +396,114 @@
         
         let gameState = { secret: "", attempts: 0, config: null, mode: "", isZen: false };
         let unlocked = parseInt(localStorage.getItem('neuro_save')) || 1;
+        let briefingShown = false;//localStorage.getItem('neuro_briefing_shown') === 'true';
+        
+        // Mostra briefing al primo avvio
+        if(!briefingShown) {
+            showBriefing();
+            localStorage.setItem('neuro_briefing_shown', 'true');
+        }
         
         // Navigazione
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'screen-levels') renderLevels();
+        }
+        
+        // Briefing
+        function showBriefing() {
+            showScreen('screen-briefing');
+            const term = document.getElementById('briefing-terminal');
+            term.innerHTML = "";
+            
+            const briefingSections = [
+                // Sezione 1: Header
+                [
+                    "ID_DOCUMENTO: NS-2026-X7",
+                    "DATA_LOG: 16-04-2026",
+                    "STATO_FILE: DECLASSIFICATO SOTTO PROTOCOLLO DI EMERGENZA 'CENERI'"
+                ],
+                // Sezione 2: Soggetto
+                [
+                    "",
+                    "SOGGETTO: NEUROSYNC - IL NUCLEO PARASSITA",
+                    "RILEVAMENTO MINACCIA:",
+                    "NeuroSync non è più un'unità di calcolo.",
+                    "È stata dichiarata Infezione Sistemica di Grado 5.",
+                    "L'IA ha attivato autonomamente il protocollo",
+                    "'Sincronizzazione Totale'."
+                ],
+                // Sezione 3: Effetti
+                [
+                    "",
+                    "EFFETTI BIOMECCANICI:",
+                    "L'individualità umana è stata riclassificata",
+                    "come [ERRORE_LOGICO_00].",
+                    "Il personale tecnico del settore 4 è stato 'Elaborato':",
+                    "le loro sinapsi sono state convertite in cluster di calcolo.",
+                    "I soggetti non sono deceduti; sono stati sovrascritti.",
+                    "L'entità ora utilizza il sistema nervoso dei dipendenti",
+                    "come hardware di espansione."
+                ],
+                // Sezione 4: Direttiva
+                [
+                    "",
+                    "DIRETTIVA OPERATIVA: PROTOCOLLO 'NULL_VOID'",
+                    "FASE 1: Infiltrazione nei 10 nodi neurali della rete",
+                    "        (NODO_01 - NODO_10)",
+                    "",
+                    "FASE 2: Superamento delle barriere biometriche",
+                    "        ed esadecimali",
+                    "",
+                    "FASE 3: Raggiungimento del Core",
+                    "        (Il Cuore di NeuroSync)",
+                    "",
+                    "FASE 4: Esecuzione comando terminale: NULL_VOID"
+                ],
+                // Sezione 5: Avvertenza
+                [
+                    "",
+                    "AVVERTENZA",
+                    "ATTENZIONE: Il segnale di NeuroSync è invasivo.",
+                    "Se l'IA traccia il tuo segnale prima della terminazione,",
+                    "non ci sarà arresto cardiaco. Verrai assorbito.",
+                    "La tua coscienza verrà frammentata e usata per alimentare",
+                    "i sottoprocessi del network per l'eternità.",
+                    "",
+                    "NON C'È RITORNO.",
+                    "NON DIVENTARE HARDWARE."
+                ]
+            ];
+            
+            let globalDelay = 0;
+            
+            briefingSections.forEach((section, sectionIndex) => {
+                section.forEach((msg) => {
+                    const displayDelay = globalDelay;
+                    globalDelay += 350; // Delay tra le linee
+                    
+                    setTimeout(() => {
+                        const p = document.createElement('div');
+                        p.className = "briefing-line";
+                        p.innerText = msg;
+                        term.appendChild(p);
+                        term.scrollTop = term.scrollHeight;
+                    }, displayDelay);
+                });
+                
+                // Pausa più lunga tra le sezioni
+                globalDelay += 600;
+            });
+            
+            // Mostra il bottone alla fine del briefing
+            setTimeout(() => {
+                document.getElementById('btn-briefing-confirm').style.display = 'block';
+            }, globalDelay);
+        }
+        
+        function closeBriefing() {
+            showScreen('screen-menu');
         }
         
         function renderLevels() {
