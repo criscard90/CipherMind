@@ -41,6 +41,91 @@
             z-index: -1;
         }
         
+        /* Effetto Matrix nello sfondo */
+        /* Contenitore Matrix */
+        .matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -2;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        /* Singola colonna di caratteri */
+        .matrix-column {
+            position: relative;
+            top: -100px;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+        
+        /* Stringa di caratteri che cade */
+        .matrix-char-string {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.2rem;
+            color: var(--accent);
+            text-shadow: 0 0 8px var(--accent);
+            white-space: nowrap;
+            writing-mode: vertical-rl; /* Mette i caratteri in verticale */
+            opacity: 0;
+            animation: matrix-fall linear infinite;
+        }
+        
+@keyframes matrix-fall {
+            0% { transform: translateY(-120vh); opacity: 0; }
+            5% { opacity: 1; }
+            95% { opacity: 1; }
+            100% { transform: translateY(120vh); opacity: 0; }
+        }
+        
+        .matrix-bg::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(0deg, transparent 24%, rgba(0, 242, 255, 0.03) 50%, transparent 75%),
+            linear-gradient(90deg, transparent 24%, rgba(0, 242, 255, 0.03) 50%, transparent 75%);
+            background-size: 50px 50px;
+            animation: matrix-grid 10s linear infinite;
+        }
+        
+        @keyframes matrix-grid {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+        
+.matrix-char {
+    position: absolute;
+    top: -50px; /* Li tiene fuori dallo schermo prima dell'inizio */
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    color: rgba(0, 242, 255, 0.8);
+    text-shadow: 0 0 8px var(--accent);
+    user-select: none;
+    pointer-events: none;
+    animation: matrix-fall linear infinite;
+}
+
+@keyframes matrix-fall {
+    0% { 
+        transform: translateY(0); 
+        opacity: 0; 
+    }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { 
+        transform: translateY(110vh); 
+        opacity: 0; 
+    }
+}
+        
         .card {
             width: 90%;
             max-width: 450px;
@@ -102,6 +187,39 @@
             color: var(--text-muted);
             font-size: 0.7rem;
             overflow: hidden;
+            position: relative;
+        }
+        
+        /* Effetto glitch tremolante all'immagine */
+        .story-img img {
+            position: relative;
+            z-index: 1;
+            animation: glitch 2s infinite;
+        }
+        
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+        }
+        
+        .story-img::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 242, 255, 0.1);
+            z-index: 2;
+            animation: flicker 3s infinite;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.3; }
         }
         
         .boot-terminal {
@@ -261,7 +379,7 @@
                     const imagePath = `livello${lvl.l}.jpg`;
                     
                     // Inseriamo l'immagine nel div, con lo stile corretto
-                    storyImgDiv.innerHTML = `<img src="${imagePath}" alt="Visuale Nodo ${lvl.l}" style="width:100%; height:100%; object-fit:cover;">`;      
+                    storyImgDiv.innerHTML = `<img src="${imagePath}" alt="Visuale Nodo ${lvl.l}" style="width:100%; height:100%; object-fit:cover;">`;
                     showScreen('screen-story');
                 };
                 grid.appendChild(div);
@@ -334,7 +452,50 @@
             showScreen('screen-game');
             document.getElementById('guessInput').focus();
             console.log("Backdoor:", gameState.secret);
+            
+            // Aggiungi effetto Matrix allo screen-game
+            if (document.getElementById('screen-game').classList.contains('active')) {
+                addMatrixEffect();
+            }
         }
+        
+function addMatrixEffect() {
+    // Rimuovi vecchi contenitori se esistono per evitare duplicati
+    const oldMatrix = document.querySelector('.matrix-bg');
+    if (oldMatrix) oldMatrix.remove();
+
+    const matrixBg = document.createElement('div');
+    matrixBg.className = 'matrix-bg';
+    document.body.appendChild(matrixBg);
+
+    const columnCount = 40; // Numero di scie
+
+    for (let i = 0; i < columnCount; i++) {
+        const char = document.createElement('div');
+        char.className = 'matrix-char';
+        
+        // Carattere casuale (Katana o Alfanumerico)
+        char.innerText = String.fromCharCode(0x30A0 + Math.random() * 96);
+        
+        // Posizione orizzontale casuale
+        char.style.left = Math.random() * 100 + '%';
+        
+        // Durata caduta casuale tra 2 e 5 secondi
+        const duration = 2 + Math.random() * 3;
+        char.style.animationDuration = duration + 's';
+        
+        // RITARDO NEGATIVO: fa apparire i caratteri già a metà strada
+        const delay = Math.random() * -5; 
+        char.style.animationDelay = delay + 's';
+        
+        matrixBg.appendChild(char);
+
+        // Opzionale: cambia il carattere durante la caduta per dinamismo
+        setInterval(() => {
+            char.innerText = String.fromCharCode(0x30A0 + Math.random() * 96);
+        }, 100 + Math.random() * 500);
+    }
+}
         
         function makeGuess() {
             const input = document.getElementById('guessInput');
