@@ -356,8 +356,9 @@
         <div id="screen-menu" class="screen active">
             <h1>NEUROSYNC_OS</h1>
             <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 2rem;">SISTEMA DI DECRIPTAZIONE ATTIVO</p>
-            <button class="btn" onclick="showScreen('screen-levels')">Nodi Sequenza (Livelli)</button>
+            <button class="btn" onclick="showScreen('screen-levels')">infiltrazione nei Nodi</button>
             <button class="btn" onclick="showScreen('screen-fast-config')">Infiltrazione Rapida</button>
+            <button class="btn" style="margin-top: 30px; border-color: var(--danger); color: var(--danger);" onclick="showScreen('screen-reset')">Cancella Memoria Locale</button>
         </div>
         
         <div id="screen-levels" class="screen">
@@ -431,6 +432,20 @@
                 </p>
             </div>
             <button class="btn" style="margin-top: 25px;" onclick="closeTutorial()">Inizia il Gioco</button>
+        </div>
+        
+        <div id="screen-reset" class="screen">
+            <h2 style="color: var(--danger); margin-bottom: 25px; font-size: 1.1rem;">ATTENZIONE: CANCELLAZIONE MEMORIA</h2>
+            <p style="font-size: 0.9rem; line-height: 1.6; margin-bottom: 30px; color: #e2e8f0;">
+                Se procedi, NeuroSync recupererà il controllo dei nodi che hai liberato.<br><br>
+                <span style="color: var(--danger); font-weight: bold;">Tutti i progressi saranno persi.</span><br>
+                L'umanità ricadrà nuovamente sotto il dominio dell'IA parassita.<br><br>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Il destino della razza umana dipende dalla tua scelta...</span>
+            </p>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" style="border-color: var(--danger); color: var(--danger);" onclick="resetGame()">Procedere con Reset</button>
+                <button class="btn" onclick="showScreen('screen-menu')">Ritorna in Sicurezza</button>
+            </div>
         </div>
         
         <div id="screen-result" class="screen">
@@ -580,6 +595,21 @@
             if (document.getElementById('screen-game').classList.contains('active')) {
                 addMatrixEffect();
             }
+        }
+        
+        function resetGame() {
+            // Cancella tutti i dati salvati
+            localStorage.removeItem('neuro_save');
+            localStorage.removeItem('neuro_briefing_shown');
+            localStorage.removeItem('neuro_tutorial_shown');
+            
+            // Reset variabili globali
+            unlocked = 1;
+            briefingShown = false;
+            tutorialShown = false;
+            
+            // Torna al menu principale
+            showScreen('screen-menu');
         }
         
         function renderLevels() {
