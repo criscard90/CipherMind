@@ -159,6 +159,8 @@
         .card {
             width: 90%;
             max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
             background: rgba(10, 15, 25, 0.9);
             backdrop-filter: blur(20px);
             border: 1px solid var(--accent);
@@ -300,7 +302,7 @@
             text-transform: uppercase;
         }
         
-        .history { max-height: 180px; overflow-y: auto; margin-top: 10px; border-top: 1px solid var(--glass); }
+        .history { max-height: 140px; overflow-y: auto; margin-top: 10px; border-top: 1px solid var(--glass); }
         .attempt { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid var(--glass); font-family: monospace; }
         .o { color: var(--correct); text-shadow: 0 0 5px var(--correct); }
         .x { color: var(--misplaced); text-shadow: 0 0 5px var(--misplaced); }
@@ -912,6 +914,22 @@ function addMatrixEffect() {
         // Listener Invio
         document.getElementById('guessInput').addEventListener('keypress', (e) => {
             if(e.key === 'Enter') makeGuess();
+        });
+        
+        // Pausa musica quando l'app va in background
+        document.addEventListener('visibilitychange', function() {
+            const audio = document.getElementById('bgMusic');
+            if (document.hidden) {
+                audio.pause();
+            } else {
+                audio.play().catch(() => {});
+            }
+        });
+        
+        // Pausa musica quando si esce dalla pagina
+        window.addEventListener('pagehide', function() {
+            const audio = document.getElementById('bgMusic');
+            audio.pause();
         });
         
         // PWA Service Worker
