@@ -311,6 +311,7 @@
         }
 
         @keyframes img-glitch-2 {
+
             0%,
             100% {
                 transform: translate(0);
@@ -502,7 +503,8 @@
             gap: 8px;
             justify-content: center;
             align-items: center;
-            height: 36px; /* Altezza fissa per evitare spostamenti della UI */
+            height: 36px;
+            /* Altezza fissa per evitare spostamenti della UI */
             margin-bottom: 10px;
         }
 
@@ -582,7 +584,8 @@
         }
 
         .history {
-            height: 105px; /* 3 elementi da 35px ciascuno, fisso per non far spostare la UI */
+            height: 105px;
+            /* 3 elementi da 35px ciascuno, fisso per non far spostare la UI */
             overflow-y: auto;
             margin-top: 10px;
             border-top: 1px solid var(--glass);
@@ -593,7 +596,8 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 12px;
-            height: 35px; /* Altezza fissa */
+            height: 35px;
+            /* Altezza fissa */
             box-sizing: border-box;
             border-bottom: 1px solid var(--glass);
             font-family: monospace;
@@ -1412,7 +1416,7 @@
             { l: 7, len: 5, ch: "0123456789", att: 15, story: "Settore Logistica. Una lunga stringa numerica ti separa dai piani di NeuroSync." },
             { l: 8, len: 5, ch: "0123456789ABCDE", att: 12, story: "L'IA ti parla nel terminale: 'Perché vuoi fermare l'evoluzione?'. Non ascoltare." },
             { l: 9, len: 6, ch: "0123456789", att: 15, story: "Sei vicinissimo al Core. La complessità è massima, il tempo stringe." },
-            { l: 10, len: 6, ch: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", att: 12, story: "CUORE DI NEUROSYNC. Per eseguire il comando NULL_VOID devi decrittare 9 sequenze. Ogni sequenza ha difficoltà casuale. Non c'è margine d'errore." }
+            { l: 10, len: 6, ch: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", att: 12, story: "CUORE DI NEUROSYNC. Per eseguire il comando NULL_VOID devi decriptare 9 sequenze. Ogni sequenza ha difficoltà casuale. Non c'è margine d'errore." }
         ];
 
         const NULL_VOID_WORD = 'NULL_VOID';
@@ -2102,7 +2106,7 @@
             renderNullVoidBar(bar);
 
             const statusEl = document.getElementById('nv-status');
-            statusEl.textContent = 'Decrittazione in corso...';
+            statusEl.textContent = 'Decriptazione in corso...';
             document.getElementById('btn-nv-next').style.display = 'none';
 
             // Matrix decrypt animation per il carattere appena rivelato
@@ -2124,7 +2128,7 @@
                     charEl.classList.add('revealed');
 
                     if (isFinal) {
-                        statusEl.innerHTML = '<span style="color:var(--correct); font-size:1rem;">✓ NULL_VOID DECRITTATO</span>';
+                        statusEl.innerHTML = '<span style="color:var(--correct); font-size:1rem;">✓ NULL_VOID DECRIPTATO</span>';
                         const btnNext = document.getElementById('btn-nv-next');
                         btnNext.textContent = 'ESEGUI NULL_VOID';
                         btnNext.style.display = 'block';
@@ -2132,7 +2136,7 @@
                         btnNext.style.color = 'var(--correct)';
                         btnNext.onclick = () => showNullVoidFinal();
                     } else {
-                        statusEl.innerHTML = `<span style="color:var(--correct);">✓ Carattere decrittato: ${targetChar}</span>`;
+                        statusEl.innerHTML = `<span style="color:var(--correct);">✓ Carattere decriptato: ${targetChar}</span>`;
                         const btnNext = document.getElementById('btn-nv-next');
                         btnNext.textContent = 'Prossima Sequenza';
                         btnNext.style.display = 'block';
