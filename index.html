@@ -199,11 +199,12 @@
             max-width: 450px;
             max-height: 90vh;
             overflow-y: auto;
-            background: rgba(10, 15, 25, 0.9);
-            backdrop-filter: blur(20px);
+            background: rgba(5, 7, 10, 0.75); /* var(--bg) semi-trasparente */
+            backdrop-filter: blur(4px); /* Sfoca il matrix che scorre dietro */
+            -webkit-backdrop-filter: blur(4px);
             border: 1px solid var(--accent);
-            padding: 2rem;
-            border-radius: 15px;
+            padding: 20px;
+            border-radius: 8px;
             text-align: center;
             box-shadow: 0 0 40px rgba(0, 242, 255, 0.15);
             position: relative;
