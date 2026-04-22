@@ -1437,7 +1437,8 @@
         let unlocked = parseInt(localStorage.getItem('neuro_save')) || 1;
         let briefingShown = localStorage.getItem('neuro_briefing_shown') === 'true';
         let tutorialShown = localStorage.getItem('neuro_tutorial_shown') === 'true';
-        let hints = Math.min(parseInt(localStorage.getItem('neuro_hints')) || 3, 3);
+        let savedHints = localStorage.getItem('neuro_hints');
+        let hints = savedHints !== null ? Math.min(parseInt(savedHints), 3) : 3;
 
         // Mostra briefing al primo avvio
         if (!briefingShown) {
@@ -1570,7 +1571,7 @@
             unlocked = 1;
             briefingShown = false;
             tutorialShown = false;
-            hints = 0;
+            hints = 3; // Si inizia sempre con 3 hints al reset
             gameState.isNullVoid = false;
             gameState.nullVoidProgress = 0;
             gameState.nullVoidRevealed = [];
@@ -1584,24 +1585,33 @@
             grid.innerHTML = "";
             levels.forEach(lvl => {
                 const div = document.createElement('div');
-                div.className = `lvl-node ${lvl.l > unlocked ? 'locked' : (lvl.l === unlocked ? 'active' : '')}`;
-                div.innerText = lvl.l;
-                if (lvl.l <= unlocked) div.onclick = () => {
-                    gameState.config = lvl;
-                    gameState.mode = 'levels';
-                    gameState.isZen = false;
-                    document.getElementById('story-title').innerText = "NODO_" + String(lvl.l).padStart(2, '0');
-                    document.getElementById('story-text').innerText = lvl.story;
+                let statusClass = lvl.l < unlocked ? 'completed' : (lvl.l > unlocked ? 'locked' : 'active');
+                div.className = `lvl-node ${statusClass}`;
+                
+                if (lvl.l < unlocked) {
+                    div.innerHTML = `${lvl.l}<br><span style="font-size:0.55rem; display:block; margin-top:5px; color:var(--correct)">SUPERATO</span>`;
+                    div.style.borderColor = 'var(--correct)';
+                    div.style.opacity = '0.6';
+                    div.style.cursor = 'not-allowed';
+                    div.style.lineHeight = '1.2';
+                } else {
+                    div.innerText = lvl.l;
+                }
 
-                    const storyImgDiv = document.getElementById('story-img');
+                if (lvl.l === unlocked) {
+                    div.onclick = () => {
+                        gameState.config = lvl;
+                        gameState.mode = 'levels';
+                        gameState.isZen = false;
+                        document.getElementById('story-title').innerText = "NODO_" + String(lvl.l).padStart(2, '0');
+                        document.getElementById('story-text').innerText = lvl.story;
 
-                    // Costruiamo il nome del file immagine: livello1.jpg, livello2.jpg, ecc.
-                    const imagePath = `livello${lvl.l}.jpg`;
-
-                    // Inseriamo l'immagine nel div, con lo stile corretto
-                    storyImgDiv.innerHTML = `<img src="${imagePath}" alt="Visuale Nodo ${lvl.l}" style="width:100%; height:100%; object-fit:cover;">`;
-                    showScreen('screen-story');
-                };
+                        const storyImgDiv = document.getElementById('story-img');
+                        const imagePath = `livello${lvl.l}.jpg`;
+                        storyImgDiv.innerHTML = `<img src="${imagePath}" alt="Visuale Nodo ${lvl.l}" style="width:100%; height:100%; object-fit:cover;">`;
+                        showScreen('screen-story');
+                    };
+                }
                 grid.appendChild(div);
             });
         }
@@ -1615,14 +1625,27 @@
 
             let logs;
             if (c.l === 10) {
-                logs = [
+                logs = [];
+                let givenBonus = localStorage.getItem('neuro_lvl10_bonus');
+                if (!givenBonus) {
+                    hints = Math.min(hints + 2, 3);
+                    localStorage.setItem('neuro_hints', hints);
+                    localStorage.setItem('neuro_lvl10_bonus', 'true');
+                    logs.push(
+                        "> INTERFERENZA RILEVATA: [NEUROSYNC CORE]",
+                        "> \"PRENDI QUESTI 2 HINTS BONUS. TANTO NON TI SALVERANNO.\"",
+                        "> HINTS AGGIUNTI AL TUO PROFILO."
+                    );
+                }
+                
+                logs.push(
                     "> INIZIALIZZAZIONE BYPASS...",
                     "> ANALISI PROTOCOLLO NEUROSYNC...",
                     "> LUNGHEZZA RILEVATA: NON DISPONIBILE",
                     "> CHARSET ESTRATTO: NON DISPONIBILE",
                     "> REGOLA DUPLICATI: [NON AMMESSI]",
                     "> ACCESSO GARANTITO. AVVIO..."
-                ];
+                );
                 // Effetto glitch intermedio
                 document.body.classList.add('glitch-2');
                 document.getElementById('glitch-overlay').classList.add('active');
