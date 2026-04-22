@@ -797,6 +797,17 @@
             }
         }
 
+        /* Riduci impatto su dispositivi mobili: meno ripaints e animazioni più lente */
+        @media (max-width: 768px) {
+            .glitch-overlay::before { animation-duration: 0.3s; }
+            .glitch-overlay::after { animation-duration: 0.25s; }
+            .card { -webkit-backdrop-filter: none; backdrop-filter: none; }
+            .matrix-char { font-size: 14px; }
+            .glitch-2 .card { animation-duration: 0.6s; }
+            .glitch-3 .card { animation-duration: 0.35s; }
+            .glitch-4 .card { animation-duration: 0.2s; }
+        }
+
         /* Level 1: Subtle */
         .glitch-1 .card {
             animation: g1-aberration 3s infinite;
@@ -1434,6 +1445,10 @@
         ];
 
         let gameState = { secret: "", attempts: 0, config: null, mode: "", isZen: false, hintsUsedThisLevel: 0, revealedPositions: [], isNullVoid: false, nullVoidProgress: 0, nullVoidRevealed: [] };
+        // Flag per sospendere temporaneamente gli effetti pesanti (es. durante la digitazione)
+        let effectsPaused = false;
+        // Array per conservare gli interval dei matrix chars e poterli pulire
+        window.matrixIntervals = window.matrixIntervals || [];
         let unlocked = parseInt(localStorage.getItem('neuro_save')) || 1;
         let briefingShown = localStorage.getItem('neuro_briefing_shown') === 'true';
         let tutorialShown = localStorage.getItem('neuro_tutorial_shown') === 'true';
@@ -1763,15 +1778,23 @@
         }
 
         function addMatrixEffect() {
-            // Rimuovi vecchi contenitori se esistono per evitare duplicati
             const oldMatrix = document.querySelector('.matrix-bg');
+            // Pulisci eventuali interval precedenti
+            if (window.matrixIntervals.length) {
+                window.matrixIntervals.forEach(id => clearInterval(id));
+                window.matrixIntervals = [];
+            }
             if (oldMatrix) oldMatrix.remove();
+
+            // Se gli effetti sono sospesi o il device è molto limitato, non creare il matrix
+            if (effectsPaused) return;
 
             const matrixBg = document.createElement('div');
             matrixBg.className = 'matrix-bg';
             document.body.appendChild(matrixBg);
 
-            const columnCount = 40; // Numero di scie
+            // Riduci il numero di colonne sui dispositivi mobili per risparmiare CPU
+            const columnCount = isMobileDevice() ? 12 : 40;
 
             for (let i = 0; i < columnCount; i++) {
                 const char = document.createElement('div');
@@ -1793,10 +1816,12 @@
 
                 matrixBg.appendChild(char);
 
-                // Opzionale: cambia il carattere durante la caduta per dinamismo
-                setInterval(() => {
+                // Cambia il carattere durante la caduta, ma con intervalli più larghi su mobile
+                const intervalMs = isMobileDevice() ? (500 + Math.random() * 700) : (150 + Math.random() * 500);
+                const id = setInterval(() => {
                     char.innerText = String.fromCharCode(0x30A0 + Math.random() * 96);
-                }, 100 + Math.random() * 500);
+                }, intervalMs);
+                window.matrixIntervals.push(id);
             }
         }
 
@@ -1864,6 +1889,30 @@
                     currentRow = [];
                 }
             });
+        }
+
+        // Sospendi gli effetti pesanti (usato durante la digitazione)
+        function pauseEffects() {
+            effectsPaused = true;
+            // Rimuove classi glitch e overlay per evitare repaint pesanti
+            clearGlitchEffect();
+            // Rimuove matrix
+            const oldMatrix = document.querySelector('.matrix-bg');
+            if (oldMatrix) oldMatrix.remove();
+            if (window.matrixIntervals.length) {
+                window.matrixIntervals.forEach(id => clearInterval(id));
+                window.matrixIntervals = [];
+            }
+        }
+
+        function resumeEffects() {
+            effectsPaused = false;
+            // Ripristina glitch in base allo stato attuale
+            updateGlitchEffect();
+            // Ricrea matrix solo se siamo nello screen-game
+            if (document.getElementById('screen-game').classList.contains('active')) {
+                addMatrixEffect();
+            }
         }
 
         // Aggiungi carattere all'input
@@ -2075,6 +2124,7 @@
         // ---- GLITCH SYSTEM ----
         function updateGlitchEffect() {
             if (gameState.isZen) return;
+            if (effectsPaused) return;
             const max = gameState.config.att;
             const remaining = gameState.attempts;
             const pct = remaining / max;
@@ -2084,25 +2134,47 @@
             // Remove all glitch levels
             body.classList.remove('glitch-1', 'glitch-2', 'glitch-3', 'glitch-4');
             overlay.classList.remove('active');
-
-            if (pct <= 0.10) {
-                body.classList.add('glitch-4');
-                overlay.classList.add('active');
-            } else if (pct <= 0.25) {
-                body.classList.add('glitch-3');
-                overlay.classList.add('active');
-            } else if (pct <= 0.50) {
-                body.classList.add('glitch-2');
-                overlay.classList.add('active');
-            } else if (pct <= 0.75) {
-                body.classList.add('glitch-1');
-                overlay.classList.add('active');
+            // Su mobile limitiamo la severità per risparmiare risorse
+            const mobile = isMobileDevice();
+            if (mobile) {
+                if (pct <= 0.10) {
+                    body.classList.add('glitch-3');
+                    overlay.classList.add('active');
+                } else if (pct <= 0.25) {
+                    body.classList.add('glitch-2');
+                    overlay.classList.add('active');
+                } else if (pct <= 0.50) {
+                    body.classList.add('glitch-1');
+                    overlay.classList.add('active');
+                }
+            } else {
+                if (pct <= 0.10) {
+                    body.classList.add('glitch-4');
+                    overlay.classList.add('active');
+                } else if (pct <= 0.25) {
+                    body.classList.add('glitch-3');
+                    overlay.classList.add('active');
+                } else if (pct <= 0.50) {
+                    body.classList.add('glitch-2');
+                    overlay.classList.add('active');
+                } else if (pct <= 0.75) {
+                    body.classList.add('glitch-1');
+                    overlay.classList.add('active');
+                }
             }
         }
 
         function clearGlitchEffect() {
             document.body.classList.remove('glitch-1', 'glitch-2', 'glitch-3', 'glitch-4');
-            document.getElementById('glitch-overlay').classList.remove('active');
+            const overlay = document.getElementById('glitch-overlay');
+            if (overlay) overlay.classList.remove('active');
+            // Rimuovi matrix e pulisci interval
+            const oldMatrix = document.querySelector('.matrix-bg');
+            if (oldMatrix) oldMatrix.remove();
+            if (window.matrixIntervals && window.matrixIntervals.length) {
+                window.matrixIntervals.forEach(id => clearInterval(id));
+                window.matrixIntervals = [];
+            }
         }
 
         // ---- NULL_VOID SYSTEM ----
@@ -2295,6 +2367,13 @@
         document.getElementById('guessInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') makeGuess();
         });
+
+        // Migliora responsività: metti in pausa gli effetti quando l'input è attivo (soprattutto su mobile)
+        const _guessEl = document.getElementById('guessInput');
+        if (_guessEl) {
+            _guessEl.addEventListener('focus', () => pauseEffects());
+            _guessEl.addEventListener('blur', () => setTimeout(() => resumeEffects(), 250));
+        }
 
         // Listener globale per NULL_VOID final screen
         document.addEventListener('keydown', (e) => {
