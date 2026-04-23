@@ -472,7 +472,6 @@
             background: #ffaa00;
             box-shadow: 0 0 8px #ffaa00;
         }
-
         .btn-hint {
             background: transparent;
             color: #ffaa00;
@@ -1249,6 +1248,16 @@
                 <button class="btn" onclick="setupFast('zen')">MOD_ZEN</button>
                 <button class="btn" onclick="setupFast('challenge')">MOD_SFIDA</button>
             </div>
+            <!-- Spiegazione HINTS integrata nel tutorial -->
+            <div style="margin-top:15px; text-align:left;">
+                <p><strong style="color: var(--accent);">HINTS:</strong></p>
+                <p>Hai a disposizione fino a <strong>3 HINT</strong>. Ogni hint rivela un singolo carattere della chiave
+                    in una posizione casuale (es. "POS 2: A"). Usare un hint consuma uno slot e aggiorna il contatore
+                    salvato localmente; se completi un nodo senza usare hint puoi guadagnarne uno come ricompensa.
+                    Gli hint sono disponibili solo nella modalità livelli.</p>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Suggerimento: usa gli hint per sbloccare posizioni difficili,
+                    ma ricorda che ogni hint usata riduce la probabilità di ottenere un hint di ricompensa per quel nodo.</p>
+            </div>
             <button class="btn" onclick="showScreen('screen-menu')">Indietro</button>
         </div>
 
@@ -1288,12 +1297,12 @@
                 <p><strong style="color: var(--accent);">ESEMPIO:</strong></p>
                 <p>Se il codice è <strong>ABC</strong> e tu inserisci <strong>BAC</strong>:<br>
                     Riceverai: <strong style="color: var(--correct);">O</strong> <strong
-                        style="color: var(--correct);">O</strong> <strong style="color: var(--misplaced);">X</strong>
+                        style="color: var(--misplaced);">X</strong> <strong style="color: var(--misplaced);">X</strong>
                 </p>
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 10px;">
-                    (La B è giusta in posizione 1 = O)<br>
-                    (La A è giusta in posizione 2 = O)<br>
-                    (La C è nel codice ma in posizione 3, non 2 = X)
+                    (La B è nel codice ma in posizione 2 = X)<br>
+                    (La A è nel codice ma in posizione 1 = X)<br>
+                    (La C è giusta in posizione 3 = O)
                 </p>
             </div>
             <button class="btn" style="margin-top: 25px;" onclick="closeTutorial()">Inizia il Gioco</button>
@@ -2012,6 +2021,8 @@
 
             updateHintUI();
         }
+
+        
 
         // ---- GLITCH SYSTEM ----
         function updateGlitchEffect() {
